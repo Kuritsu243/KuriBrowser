@@ -1,3 +1,12 @@
 ﻿  main.cpp
-H:\RiderProjects\KuriBrowser\kuribrowser\main.cpp(46,13): warning C4505: 'ShowFileMenu': unreferenced function with internal linkage has been removed
-  kuribrowser.vcxproj -> H:\RiderProjects\KuriBrowser\kuribrowser\Debug\kuribrowser.exe
+F:\RiderProjects\KuriBrowser\kuribrowser\main.cpp(214,87): warning C4238: nonstandard extension used: class rvalue used as lvalue
+D:\VS2022\VC\Tools\MSVC\14.35.32215\include\algorithm(246,9): error C2664: 'void main::<lambda_b583f8f7fa384ddebad31a9684f646e4>::operator ()(bool *) const': cannot convert argument 1 from 'std::_Vb_reference<std::_Wrap_alloc<std::allocator<std::_Vbase>>>' to 'bool *'
+D:\VS2022\VC\Tools\MSVC\14.35.32215\include\algorithm(246,15): message : No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+F:\RiderProjects\KuriBrowser\kuribrowser\main.cpp(223,25): message : see declaration of 'main::<lambda_b583f8f7fa384ddebad31a9684f646e4>::operator ()'
+D:\VS2022\VC\Tools\MSVC\14.35.32215\include\algorithm(246,9): message : while trying to match the argument list '(std::_Vb_reference<std::_Wrap_alloc<std::allocator<std::_Vbase>>>)'
+F:\RiderProjects\KuriBrowser\kuribrowser\main.cpp(224,25): message : see reference to function template instantiation '_Fn std::for_each<std::_Vb_iterator<std::_Wrap_alloc<std::allocator<std::_Vbase>>>,main::<lambda_b583f8f7fa384ddebad31a9684f646e4>>(_InIt,_InIt,_Fn)' being compiled
+          with
+          [
+              _Fn=main::<lambda_b583f8f7fa384ddebad31a9684f646e4>,
+              _InIt=std::_Vb_iterator<std::_Wrap_alloc<std::allocator<std::_Vbase>>>
+          ]
