@@ -48,6 +48,9 @@ Index of this file:
 // [SECTION] Header mess
 //-----------------------------------------------------------------------------
 
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS_IMPLEMENTED
 #ifndef IMGUI_VERSION
 #include "imgui.h"
 #endif

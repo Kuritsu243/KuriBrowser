@@ -1,184 +1,271 @@
-// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
-// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
-
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "imgui/backends/imgui_impl_glfw.h"
-#include <stdio.h>
+#include "imgui/imfilebrowser.h"
+#include "rapidjson/filereadstream.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <cstdio>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
-// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
-// To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
-// Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
+#include "rapidjson/document.h"
+#include "rapidjson/istreamwrapper.h"
+#ifndef RAPIDJSON_DEFAULT_ALLOCATOR
+#define RAPIDJSON_DEFAULT_ALLOCATOR ::RAPIDJSON_NAMESPACE::MemoryPoolAllocator< ::RAPIDJSON_NAMESPACE::CrtAllocator >
+#endif
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#pragma comment(lib, "legacy_stdio_definitions")
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 #endif
-
-// This example can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
-#ifdef __EMSCRIPTEN__
-#include "../libs/emscripten/emscripten_mainloop_stub.h"
-#endif
-
+// setup error callback
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-// Main code
-int main(int, char**)
-{
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
-        return 1;
 
-    // Decide GL+GLSL versions
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-    // GL ES 2.0 + GLSL 100
-    const char* glsl_version = "#version 100";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-#elif defined(__APPLE__)
-    // GL 3.2 + GLSL 150
-    const char* glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
-#else
-    // GL 3.0 + GLSL 130
+ImGui::FileBrowser InitializeFileMenu()
+{
+    // init file browser
+    ImGui::FileBrowser fileDialog = ImGui::FileBrowser(ImGuiFileBrowserFlags_SelectDirectory);
+    fileDialog.SetTitle("Add a new project");
+    return fileDialog;
+}
+
+void FileSelected()
+{
+    
+}
+
+
+static void ShowFileMenu(ImGui::FileBrowser uiFileBrowser)
+{
+
+}
+
+int get_current_selection_index(bool *selections)
+{
+    for (auto current_index = 0; current_index < sizeof(selections); current_index++)
+        if (selections[current_index])
+            return current_index;
+    return -1;
+}
+
+
+void main(int, char**)
+{
+    // set error callback
+    glfwSetErrorCallback(glfw_error_callback);
+    // initialize glfw
+    if (!glfwInit())
+        return;
+    
+
+
+    
+    // setup renderer and window
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-#endif
-
-    // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
-    if (window == NULL)
-        return 1;
+    
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Main Window", NULL, NULL);
+    if (window == nullptr)
+        return;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
-
-    // Setup Dear ImGui context
+    glfwSwapInterval(1);
+    // setup context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    ImGuiIO &io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // io.ConfigFlags |=  ImGuiConfigFlags_DockingEnable;
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    // Setup Dear ImGui style
+    // setup gui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
-    // Setup Platform/Renderer backends
+    // setup renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    // - Our Emscripten build process allows embedding fonts to be accessible at runtime from the "fonts/" folder. See Makefile.emscripten for details.
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
+    // tell what windows to display
+    bool bShowMainWindow = true;
 
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    // make window maximised
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+    ImGui::SetNextWindowViewport(viewport->ID);
 
-    // Main loop
-#ifdef __EMSCRIPTEN__
-    // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
-    // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
-    io.IniFilename = NULL;
-    EMSCRIPTEN_MAINLOOP_BEGIN
-#else
-    while (!glfwWindowShouldClose(window))
-#endif
+    // init file browser
+    auto file_browser = InitializeFileMenu();
+
+
+
+    // FUCK IT WE'RE USING TXT
+    std::ifstream file("filePaths.txt", std::ios::in);
+    std::vector<std::string> lines;
+    std::string line;
+    auto line_count = 0;
+    while (std::getline(file, line))
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        glfwPollEvents();
+        lines.push_back(line);
+        line_count++;
+    }
+    std::cout << "file line count: " << line_count;
 
-        // Start the Dear ImGui frame
+    //
+    // std::ofstream newFile("newFile2.txt");
+    // std::cout << "Among\n Us";
+    // init local projects
+
+    // JSON PARSING
+    // std::ifstream file("filePaths.json");
+    // std::ostringstream tmp;
+    // tmp << file.rdbuf();
+    // std::string s = tmp.str();
+    //
+    // rapidjson::Document d;
+    // d.Parse<0>(s.c_str());
+    //
+    // std::cout << d["Test"].GetType();
+
+
+    //FILE* fp = fopen("filePaths.json", "rb");
+    //char read_buffer[65536];
+    //rapidjson::FileReadStream is(fp, read_buffer, sizeof(read_buffer));
+    //rapidjson::Document d;
+    //d.ParseStream(is);
+    //if (d.HasParseError())
+    //{
+    //    std::cout << d.GetParseError();
+    //    
+    //}
+    //fclose(fp);
+    // std::ifstream file_stream("filePaths.json");
+    // rapidjson::IStreamWrapper isw(file_stream);
+    // rapidjson::Document d;
+    // d.ParseStream(file_stream);
+    // if (d.HasParseError())
+    // {
+    //     std::cout << d.GetParseError();
+    // }
+    // std::cout << d["Test"].GetString();
+    // for (const auto& point : d["ProjectPaths"].GetArray())
+    // {
+    //     std::cout << "hello";
+    // }
+    
+    // std::cout << std::string_view(doc["ProjectPaths"]) << std::endl;
+    // for (simdjson::ondemand::object path : foundPaths)
+    // {
+    //     std::cout << "File Path: " << simdjson::to_json_string(path) << std::endl;
+    // }
+    
+    // MAIN PROGRAM
+    while (!glfwWindowShouldClose(window))
+    {
+        // pass through inputs
+        glfwPollEvents();
+        // setup imgui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        if (bShowMainWindow)
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            // create menu bar
+            if (ImGui::BeginMainMenuBar())
+            {
+                if (ImGui::BeginMenu("File"))
+                {
+                    if (ImGui::MenuItem("Add New Project"))
+                    {
+                        file_browser.Open();
+                    }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMainMenuBar();
+            }
+            
+            // create main window 
+            ImGui::Begin("Main Window");
+            if (ImGui::BeginTable("MainTable", 3, ImGuiTableFlags_Borders))
+            {
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+                static bool selected[4] = {};
+                ImGui::TableSetupColumn("Title");
+                ImGui::TableSetupColumn("Path");
+                ImGui::TableSetupColumn("Type");
+                ImGui::TableHeadersRow();
+                for (int row = 0; row < line_count; row++)
+                {
+                    std::string& element = lines[row];
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    if (ImGui::Selectable((std::to_string(row).c_str()), &selected[row], ImGuiSelectableFlags_SpanAllColumns))
+                    {
+                        for (auto &field : selected)
+                            field = false;
+                        
+                        selected[row] = true;
+                    }
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+                    // ImGui::Text("Path", row);
+                    ImGui::TableNextColumn();
+                    ImGui::Text(element.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Sus");
+                }
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                ImGui::EndTable();
+                if (ImGui::Button("Open"))
+                    std::cout << lines[get_current_selection_index(selected)] << std::endl;
+            }
+            
+            // auto selected = file_browser.GetSelected().string();
+            // char arr[800];
+            // strcpy(arr, selected.c_str());
+            // ImGui::Text(arr);
+            //
             ImGui::End();
-        }
+            file_browser.Display();
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+            // if(file_browser.HasSelected())
+            // {
+            //     selected = file_browser.GetSelected().string();
+            // }
         }
+        // OUTSIDE MAIN WINDOW
 
-        // Rendering
+        // rendering
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
         glfwSwapBuffers(window);
-    }
-#ifdef __EMSCRIPTEN__
-    EMSCRIPTEN_MAINLOOP_END;
-#endif
 
-    // Cleanup
+        
+    }
+
+    // cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -186,5 +273,4 @@ int main(int, char**)
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    return 0;
 }

@@ -1,1 +1,4 @@
 D:\Downloads\imgui-master\imgui-master\examples\kuribrowser\Debug\kuribrowser.exe
+H:\RiderProjects\KuriBrowser\kuribrowser\Debug\kuribrowser.exe
+E:\RiderProjects\KuriBrowser\kuribrowser\Debug\kuribrowser.exe
+F:\RiderProjects\KuriBrowser\kuribrowser\Debug\kuribrowser.exe

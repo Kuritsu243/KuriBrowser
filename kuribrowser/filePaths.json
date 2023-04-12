@@ -1,0 +1,8 @@
+{
+  "Test": "Hello!",
+  "ProjectPaths": [
+    {"Path": "C:/System32", "Unity":  true, "Unreal":  false},
+    {"Path": "D:/", "Unity":  false, "Unreal":  true},
+  ],
+
+}
