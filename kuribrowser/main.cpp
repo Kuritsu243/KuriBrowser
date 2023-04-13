@@ -138,7 +138,15 @@ void open_unity_button()
 {
     if (ImGui::Button("Open in Unity"))
     {
-        
+        const std::string project_dir = lines[selected_item];
+        const std::string arg = "-projectPath " + project_dir;
+        std::cout << project_dir << std::endl;
+        std::cout << arg << std::endl;
+        process = ShellExecuteA(nullptr, "open", unity_path.c_str(), arg.c_str(), nullptr, SW_SHOWNORMAL);
+        if (reinterpret_cast<int>(process) <= 32)
+        {
+            std::cout << "error opening unity project";
+        }
     }
 }
 

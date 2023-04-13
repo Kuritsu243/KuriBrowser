@@ -1,8 +1,9 @@
 ﻿#pragma once
 
 // exe paths
-inline std::string vs_path = "D:\\VS2022\\Common7\\IDE\\devenv.exe";
+inline std::string vs_path = R"(D:\VS2022\Common7\IDE\devenv.exe)";
 inline std::string vs_cmd;
+inline std::string unity_path = R"(F:\Unity Versions\2022.1.15f1\Editor\Unity.exe)";
 // sln paths
 inline std::string sln_path;
 
